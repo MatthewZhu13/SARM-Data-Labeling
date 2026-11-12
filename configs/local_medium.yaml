@@ -1,0 +1,23 @@
+# First real run on a laptop (Apple MPS): 120 consecutive annotated episodes.
+# Same model and window settings as the pilot; shorter step budgets for the smaller data.
+extends: hqf_pilot.yaml
+
+run_name: local_medium
+dataset:
+  max_episodes: 120
+split:
+  file: splits/local_medium.json
+encoder:
+  batch_size: 128
+  decode_workers: 4
+cache_dir: cache/local_medium
+stage_model:
+  steps: 8000
+reward_model:
+  steps: 15000
+train:
+  num_workers: 2
+  val_every: 500
+  save_every: 2500
+eval:
+  stride: 3

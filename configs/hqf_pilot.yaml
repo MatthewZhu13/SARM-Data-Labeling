@@ -1,0 +1,108 @@
+# SARM2 pilot on lerobot/high_quality_folding.
+# Every step reads this file; each run copies it into its run directory.
+
+run_name: hqf_pilot
+output_dir: runs
+
+dataset:
+  repo_id: lerobot/high_quality_folding
+  revision: main
+  root: data/high_quality_folding        # local download directory
+  episodes: annotated                    # "annotated" = episodes with stage labels, or a list / "537-987"
+  max_episodes: null                     # cap the episode count (smoke runs)
+  cameras:                               # short name -> v3.0 video key
+    left: observation.images.left_wrist
+    right: observation.images.right_wrist
+    top: observation.images.base
+  state_key: observation.state
+  stage_prefix: dense_subtask            # reads <prefix>_names / _start_frames / _end_frames
+  task: Fold the T-shirt properly
+
+split:
+  seed: 42
+  fractions: {train: 0.8, val: 0.1, test: 0.1}
+  file: splits/hqf_v1.json
+
+stages:
+  names:
+    - Do first fold with both arms
+    - Slide t-shirt closer
+    - Do second fold with both arms
+    - Do third fold with one arm
+    - Do final fold with one arm to make a nice square folded t-shirt
+  # MoE gate groups (indices into names). Frames outside every stage get an extra
+  # "dummy" class, which always forms its own group.
+  groups:
+    two_arm_fold: [0, 2]
+    one_arm_fold: [3, 4]
+    reposition: [1]
+
+labels:
+  progress: stage_aware                  # linear | stage_aware
+
+encoder:
+  ckpt: google/siglip2-base-patch16-224
+  image_size: 224
+  batch_size: 256
+  decode_workers: 6                      # parallel video decoders
+  decode_threads: 2                      # AV1 threads per decoder
+  chunk_frames: 256
+
+cache_dir: cache/high_quality_folding
+
+window:
+  n_obs_steps: 6                         # reward model sees start + 5 history + anchor
+  frame_gap: 30                          # 1 s at 30 fps
+  max_rewind_steps: 3
+  rewind_prob: 0.8                       # per training sample, reward model only
+
+stage_model:
+  window: episode                        # episode | segment (opensarm trains on primitive clips = segment)
+  d_model: 512
+  n_layers: 4
+  n_heads: 8
+  dropout: 0.1
+  alpha_class_loss: 0.0
+  optim: {lr: 2.5e-5, weight_decay: 0.01, betas: [0.9, 0.95], eps: 1.0e-8, warmup_steps: 1000}
+  steps: 16000
+  batch_size: 64
+
+reward_model:
+  d_model: 512
+  n_layers: 6
+  n_heads: 8
+  dropout: 0.1
+  finetune_stage_model: true
+  stage_loss_weight: 0.25
+  moe:
+    num_experts: 10
+    top_k: 2
+    gate_units: [256]
+    gate_dropout: 0.1
+    gate_act: gelu
+    expert_units: [256, 256, 256]
+    expert_dropout: 0.1
+    expert_act: gelu
+    lambda_balance: 2.5
+    lambda_entropy: 0.5
+    lambda_importance: 0.1
+    alpha_auxiliary: 0.2
+  optim: {lr: 5.0e-5, weight_decay: 5.0e-3, betas: [0.9, 0.95], eps: 1.0e-8, warmup_steps: 1000}
+  steps: 30000
+  batch_size: 64
+
+train:
+  device: auto                           # auto | cuda | mps | cpu
+  gpu_mem_fraction: 0.85                 # cap on the CUDA memory this process may use
+  num_workers: 2
+  grad_clip: 1.0
+  log_every: 50
+  val_every: 1000
+  val_anchors: 2000                      # fixed, seeded validation windows (no rewind)
+  save_every: 5000
+  early_stop_patience: null              # stop after this many val checks without improvement
+
+eval:
+  stride: 1                              # label every Nth frame of each test episode
+  batch_size: 256
+  plot_episodes: 12

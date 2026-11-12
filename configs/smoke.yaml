@@ -1,0 +1,30 @@
+# End-to-end check on a handful of episodes; runs on a laptop CPU in minutes.
+extends: hqf_pilot.yaml
+
+run_name: smoke
+dataset:
+  max_episodes: 6
+split:
+  fractions: {train: 0.67, val: 0.17, test: 0.16}
+  file: splits/smoke.json
+encoder:
+  batch_size: 64
+  decode_workers: 2
+cache_dir: cache/smoke
+stage_model:
+  steps: 60
+  batch_size: 16
+  optim: {warmup_steps: 10}
+reward_model:
+  steps: 60
+  batch_size: 16
+  optim: {warmup_steps: 10}
+train:
+  num_workers: 0
+  log_every: 10
+  val_every: 30
+  val_anchors: 64
+  save_every: 30
+eval:
+  stride: 15
+  plot_episodes: 2
