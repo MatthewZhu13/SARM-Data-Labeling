@@ -1,0 +1,955 @@
+{
+"_protocol": "docs/GOLD.md (hand labels: stage k starts when stage k-1's result is in place; 1 fps, blind)",
+"_unclear": [
+584,
+882,
+595,
+573,
+591,
+810,
+581,
+593,
+813,
+799
+],
+"_notes": {
+"794": "halving ambiguous 36-39",
+"954": "slow, rework during first fold",
+"584": "off-angle grey shirt",
+"882": "off-angle grey shirt",
+"595": "off-angle grey shirt, long retries",
+"573": "halving/retry 34-50 not readable",
+"591": "off-angle grey shirt",
+"820": "halving 40-45 ambiguous",
+"810": "off-angle grey shirt",
+"581": "off-angle grey shirt",
+"593": "off-angle grey shirt",
+"813": "off-angle grey shirt",
+"941": "halving redone 33-36",
+"566": "dataset has 12 16 25 38 (non-template), agrees within 1 s",
+"884": "first fold redone 11-13",
+"760": "slide end ambiguous 16-21",
+"667": "first fold redone 11-14",
+"799": "off-angle grey shirt"
+},
+"750": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+300,
+420,
+720,
+960
+],
+[
+300,
+420,
+720,
+960,
+1590
+]
+],
+"635": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+300,
+390,
+630,
+1050
+],
+[
+300,
+390,
+630,
+1050,
+1290
+]
+],
+"794": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+300,
+420,
+720,
+1170
+],
+[
+300,
+420,
+720,
+1170,
+1950
+]
+],
+"954": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+420,
+660,
+990,
+1530
+],
+[
+420,
+660,
+990,
+1530,
+2100
+]
+],
+"567": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+390,
+450,
+810,
+1170
+],
+[
+390,
+450,
+810,
+1170,
+1920
+]
+],
+"776": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+360,
+480,
+780,
+1080
+],
+[
+360,
+480,
+780,
+1080,
+1590
+]
+],
+"912": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+330,
+480,
+750,
+1080
+],
+[
+330,
+480,
+750,
+1080,
+1770
+]
+],
+"864": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+360,
+450,
+690,
+900
+],
+[
+360,
+450,
+690,
+900,
+1290
+]
+],
+"673": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+480,
+660,
+840,
+1110
+],
+[
+480,
+660,
+840,
+1110,
+1920
+]
+],
+"562": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+450,
+540,
+810,
+1080
+],
+[
+450,
+540,
+810,
+1080,
+1890
+]
+],
+"820": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+330,
+510,
+810,
+1350
+],
+[
+330,
+510,
+810,
+1350,
+1770
+]
+],
+"695": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+300,
+450,
+750,
+1200
+],
+[
+300,
+450,
+750,
+1200,
+1740
+]
+],
+"893": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+210,
+300,
+510,
+720
+],
+[
+210,
+300,
+510,
+720,
+930
+]
+],
+"575": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+390,
+450,
+840,
+1110
+],
+[
+390,
+450,
+840,
+1110,
+1470
+]
+],
+"903": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+300,
+390,
+630,
+840
+],
+[
+300,
+390,
+630,
+840,
+1140
+]
+],
+"615": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+300,
+360,
+540,
+870
+],
+[
+300,
+360,
+540,
+870,
+1230
+]
+],
+"678": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+270,
+510,
+690,
+960
+],
+[
+270,
+510,
+690,
+960,
+1110
+]
+],
+"942": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+270,
+480,
+720,
+1110
+],
+[
+270,
+480,
+720,
+1110,
+1920
+]
+],
+"941": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+330,
+480,
+690,
+1080
+],
+[
+330,
+480,
+690,
+1080,
+1440
+]
+],
+"576": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+420,
+450,
+720,
+900
+],
+[
+420,
+450,
+720,
+900,
+1440
+]
+],
+"909": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+240,
+330,
+540,
+720
+],
+[
+240,
+330,
+540,
+720,
+930
+]
+],
+"913": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+360,
+570,
+870,
+1350
+],
+[
+360,
+570,
+870,
+1350,
+1950
+]
+],
+"795": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+390,
+570,
+780,
+1260
+],
+[
+390,
+570,
+780,
+1260,
+2430
+]
+],
+"568": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+420,
+480,
+750,
+1260
+],
+[
+420,
+480,
+750,
+1260,
+1770
+]
+],
+"677": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+270,
+330,
+540,
+840
+],
+[
+270,
+330,
+540,
+840,
+1620
+]
+],
+"566": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+390,
+480,
+720,
+1110
+],
+[
+390,
+480,
+720,
+1110,
+1800
+]
+],
+"896": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+420,
+510,
+780,
+960
+],
+[
+420,
+510,
+780,
+960,
+1200
+]
+],
+"620": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+300,
+420,
+660,
+960
+],
+[
+300,
+420,
+660,
+960,
+1410
+]
+],
+"730": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+270,
+330,
+510,
+780
+],
+[
+270,
+330,
+510,
+780,
+1050
+]
+],
+"627": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+300,
+420,
+660,
+960
+],
+[
+300,
+420,
+660,
+960,
+1320
+]
+],
+"884": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+390,
+510,
+720,
+870
+],
+[
+390,
+510,
+720,
+870,
+1080
+]
+],
+"631": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+300,
+450,
+720,
+1050
+],
+[
+300,
+450,
+720,
+1050,
+1350
+]
+],
+"902": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+270,
+330,
+510,
+750
+],
+[
+270,
+330,
+510,
+750,
+900
+]
+],
+"760": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+360,
+630,
+960,
+1320
+],
+[
+360,
+630,
+960,
+1320,
+1530
+]
+],
+"900": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+270,
+330,
+510,
+720
+],
+[
+270,
+330,
+510,
+720,
+990
+]
+],
+"667": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+420,
+450,
+810,
+1260
+],
+[
+420,
+450,
+810,
+1260,
+1920
+]
+],
+"630": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+300,
+390,
+630,
+960
+],
+[
+300,
+390,
+630,
+960,
+1350
+]
+],
+"917": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+390,
+540,
+870,
+1230
+],
+[
+390,
+540,
+870,
+1230,
+1890
+]
+],
+"965": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+360,
+480,
+720,
+1080
+],
+[
+360,
+480,
+720,
+1080,
+1560
+]
+],
+"686": [
+[
+"Do first fold with both arms",
+"Slide t-shirt closer",
+"Do second fold with both arms",
+"Do third fold with one arm",
+"Do final fold with one arm to make a nice square folded t-shirt"
+],
+[
+0,
+300,
+420,
+660,
+1050
+],
+[
+300,
+420,
+660,
+1050,
+1470
+]
+]
+}

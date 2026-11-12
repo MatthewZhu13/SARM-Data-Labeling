@@ -47,13 +47,14 @@ def setup(cfg: Config) -> tuple[torch.device, dict, Cache]:
         torch.backends.mha.set_fastpath_enabled(False)
     split = load_split(cfg)
     cache = load_cache(cfg.cache_dir, list(cfg.dataset.cameras), list(cfg.stages.names), cfg.labels.progress,
-                       split["train"])
+                       split["train"], segments_override=cfg.labels.get("segments_override"))
     out = run_dir(cfg)
     out.mkdir(parents=True, exist_ok=True)
     (out / "config.json").write_text(json.dumps(cfg.to_dict(), indent=1))
     (out / "split.json").write_text(json.dumps(split, indent=1))
     (out / "label_stats.json").write_text(json.dumps({
-        "progress_mode": cfg.labels.progress, "stage_shares": cache.alpha.tolist(),
+        "progress_mode": cfg.labels.progress, "segments_override": cfg.labels.get("segments_override"),
+        "stage_shares": cache.alpha.tolist(),
         "state_mean": cache.state_mean.tolist(), "state_std": cache.state_std.tolist(),
         "git_commit": _git_commit()}, indent=1))
     return device, split, cache
@@ -67,7 +68,8 @@ def _git_commit() -> str:
 
 
 def to_device(batch: dict, device: torch.device) -> dict:
-    return {k: v.to(device, non_blocking=True) for k, v in batch.items()}
+    # non_blocking is only safe on CUDA; on MPS it can read the CPU buffer after it is reused
+    return {k: v.to(device, non_blocking=device.type == "cuda") for k, v in batch.items()}
 
 
 def make_optimizer(params, optim: Config, steps: int):

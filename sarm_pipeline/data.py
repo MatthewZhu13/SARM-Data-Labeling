@@ -11,7 +11,15 @@ from .config import Config
 from .v3 import V3Dataset, parse_episode_spec
 
 
+def open_local(cfg: Config):
+    """Local v2.1 sources (client data: `dataset.format: v2.1`, `dataset.sources`); never downloaded."""
+    from .v21 import V21Dataset
+    return V21Dataset(list(cfg.dataset.sources), int(cfg.dataset.get("fps", 30)))
+
+
 def fetch_metadata(cfg: Config) -> V3Dataset:
+    if cfg.dataset.get("format") == "v2.1":
+        return open_local(cfg)
     snapshot_download(cfg.dataset.repo_id, repo_type="dataset", revision=cfg.dataset.revision,
                       local_dir=cfg.dataset.root, allow_patterns=["meta/*"])
     return V3Dataset(cfg.dataset.root)
@@ -19,7 +27,9 @@ def fetch_metadata(cfg: Config) -> V3Dataset:
 
 def select_episodes(cfg: Config, ds: V3Dataset) -> list[int]:
     spec = cfg.dataset.episodes
-    if spec == "annotated":
+    if spec == "all":
+        episodes = [int(e) for e in ds.episodes.index]
+    elif spec == "annotated":
         episodes = ds.annotated_episodes(cfg.dataset.stage_prefix)
         if not episodes:
             raise ValueError(f"no episodes have {cfg.dataset.stage_prefix}_* stage labels")
@@ -34,6 +44,9 @@ def fetch(cfg: Config) -> tuple[V3Dataset, list[int]]:
     """Download metadata, then the data parquets and camera videos holding the selected episodes."""
     ds = fetch_metadata(cfg)
     episodes = select_episodes(cfg, ds)
+    if cfg.dataset.get("format") == "v2.1":
+        print(f"[fetch] local v2.1 dataset, {len(episodes)} episodes, nothing to download")
+        return ds, episodes
     cameras = dict(cfg.dataset.cameras)
     patterns = [str(ds.data_path(c, f).relative_to(ds.root)) for c, f in ds.data_files(episodes)]
     patterns += [str(ds.video_path(k, c, f).relative_to(ds.root)) for k, c, f in ds.video_files(episodes, cameras)]

@@ -108,3 +108,65 @@ def test_config_extends_and_overrides():
     cfg = load_config(ROOT / "configs/smoke.yaml", ["train.val_every=7", "labels.progress=linear"])
     assert cfg.run_name == "smoke" and cfg.train.val_every == 7 and cfg.labels.progress == "linear"
     assert cfg.reward_model.optim.lr == 5.0e-5 and cfg.reward_model.optim.warmup_steps == 10
+
+
+def test_ordered_viterbi_removes_flicker_and_stays_ordered():
+    from sarm_pipeline.decode import ordered_viterbi
+    rng = np.random.default_rng(0)
+    truth = np.repeat([0, 1, 2, 3, 4], 40)
+    probs = np.full((len(truth), 6), 0.02)
+    probs[np.arange(len(truth)), truth] = 0.9
+    flip = rng.choice(len(truth), 30, replace=False)                 # isolated wrong frames
+    probs[flip] = 0.02
+    probs[flip, (truth[flip] + 2) % 5] = 0.9
+    out = ordered_viterbi(probs / probs.sum(1, keepdims=True))
+    assert (np.diff(out) >= 0).all()
+    assert (out == truth).mean() > 0.97
+
+
+def test_separation_scores_and_auroc():
+    import pandas as pd
+    from sarm_pipeline.separation import auroc, episode_scores, separation_table
+    assert auroc(np.array([2.0, 3.0]), np.array([0.0, 1.0])) == 1.0
+    assert auroc(np.array([1.0]), np.array([1.0])) == 0.5
+    f = np.arange(300)
+    good = pd.DataFrame({"episode_index": 1, "frame_index": f, "progress": np.minimum(f / 200, 1)})
+    bad = pd.DataFrame({"episode_index": 2, "frame_index": f, "progress": 0.5 * np.sin(f / 30) ** 2})
+    s = episode_scores(pd.concat([good, bad]))
+    assert s.loc[1, "final"] == 1.0 and s.loc[1, "backward"] == 0 and s.loc[2, "backward"] > 0
+    t = separation_table(s, [1], [2])
+    assert t.loc["final", "auroc"] == 1.0 and t.loc["backward", "auroc"] == 1.0 and t.loc["length_s", "auroc"] == 0.5
+
+
+def test_gold_segments_end_at_episode_length():
+    from sarm_pipeline.pseudo import gold_segments
+    gold = {"_notes": "", "5": {"stages_s": [[0, 10], [10, 12], [12, 20], [20, 30], [30, 9999]]}, "6": {"unclear": True}}
+    seg = gold_segments(gold, {5: 1000, 6: 50}, list("abcde"))
+    assert list(seg) == [5] and seg[5][1] == [0, 300, 360, 600, 900] and seg[5][2][-1] == 1000
+
+
+def test_v21_reader_resamples_to_pipeline_fps(tmp_path):
+    import json as _json
+    import pandas as pd
+    from sarm_pipeline.v21 import V21Dataset
+    root = tmp_path / "ds"
+    (root / "meta").mkdir(parents=True)
+    (root / "data" / "chunk-000").mkdir(parents=True)
+    info = {"codebase_version": "v2.1", "fps": 50, "chunks_size": 1000,
+            "data_path": "data/chunk-{episode_chunk:03d}/episode_{episode_index:06d}.parquet",
+            "video_path": "videos/chunk-{episode_chunk:03d}/{video_key}/episode_{episode_index:06d}.mp4",
+            "features": {"observation.images.top": {"dtype": "video"}, "observation.state": {"dtype": "float32"}}}
+    (root / "meta" / "info.json").write_text(_json.dumps(info))
+    (root / "meta" / "episodes.jsonl").write_text(_json.dumps({"episode_index": 2, "tasks": ["fold"], "length": 101}) + "\n")
+    state = np.arange(101, dtype=np.float32)[:, None].repeat(3, 1)
+    pd.DataFrame({"frame_index": np.arange(101)[::-1], "observation.state": list(state[::-1])}).to_parquet(
+        root / "data" / "chunk-000" / "episode_000002.parquet")
+    ds = V21Dataset([{"root": str(root), "offset": 100}], fps=30)
+    assert list(ds.episodes.index) == [102] and ds.episodes.loc[102, "length"] == 61     # 2 s at 30 fps
+    frames = ds.native_frames(102)
+    assert frames[0] == 0 and frames[-1] == 100 and frames[3] == 5                    # round(3 * 50 / 30)
+    s = ds.read_column([102], "observation.state")[102]
+    assert s.shape == (61, 3) and (s[:, 0] == frames).all()                           # sorted by frame, then resampled
+    pm = ds.pointer_map([102], {"top": "observation.images.top"})
+    assert pm.loc[0, "video_frames"] == frames.tolist() and pm.loc[0, "native_fps"] == 50
+    assert str(ds.video_path("observation.images.top", 0, 102)).endswith("observation.images.top/episode_000002.mp4")

@@ -224,3 +224,8 @@ data/
 cache/
 runs/
 logs/
+
+# Client data and anything derived from it stays on the GPU box / out of git (docs/CLIENT.md)
+labels/client_*
+splits/client_*
+reports/client/

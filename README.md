@@ -72,6 +72,35 @@ scripts/box.sh stop                              # the box costs money while on
   - progress MAE and Spearman correlation, and how often progress drops on good demos
   - an oracle-stage ablation (progress error when the reward model is given the true stage)
 
+## Stage labels: what's wrong with the dataset's and how we fix them
+The dataset's `dense_subtask` stage labels are mostly templates (60 episodes share exactly the same
+boundaries) and sit a median 3–5 s early against the video. Models trained on them top out around
+75–81%. 40 hand-labeled train/val episodes fix that: a whole-episode labeler trained on them alone
+scores 91.4% on blind hand labels of the test set. See `docs/GOLD.md` and `docs/SNAGS.md`.
+
+| Command | What it does | Output |
+|---|---|---|
+| `episode-stage --set labels.segments_override=labels/hand_train.json episode_stage.only_override_episodes=true episode_stage.epochs=200` | Train the whole-episode stage labeler (bidirectional GRU over cached embeddings + ordered decoding) on the hand labels only | `runs/<run>/episode_stage/` |
+| `python -m sarm_pipeline.gold <predictions.parquet>` | Score against the blind hand test labels (`labels/test_gold_v2.json`) | |
+| `episode-stage-oof` | 5-fold out-of-fold predictions on train+val (earlier approach: find and relabel bad episodes) | `runs/<run>/episode_stage_oof/agreement.csv` |
+| `--set labels.segments_override=<file>` | Use relabeled segments everywhere, including SARM2 training | |
+| `python -m sarm_pipeline.pseudo --config <cfg> --runs es_hand_s0 es_hand_s1 es_hand_s2` | Hand-ensemble stage labels for every train/val episode (+ blind test labels) as override files | `labels/pseudo_hand_ens.json`, `labels/hand_ens_all.json` |
+
+## Accepted vs rejected, and the baseline
+`scripts/separation_all.sh sarm_hand hqf_pilot` (on the box) compares accepted test episodes with episodes the HF team
+left out of `high_quality_folding` (found in `lerobot/full_folding`). It scores each SARM2 run and the
+`folding_sarm_reward` baseline (`scripts/baseline_sarm1.py`, own venv) on the same 135 episodes, and writes AUROCs,
+per-episode scores and curves to `reports/separation/`. Results: [`docs/RESULTS.md`](docs/RESULTS.md). SARM2's
+progress separates them at AUROC ≈ 0.91; the baseline reaches 0.66–0.70.
+
+## Client data (local LeRobot v2.1)
+Set `dataset.format: v2.1` and list `dataset.sources` (see `configs/client_nurvai2.yaml`). `sarm_pipeline/v21.py`
+reads per-episode parquet/mp4 datasets in place and resamples them to 30 fps. Client data and the labels derived
+from it stay on the box: they are excluded from git and from `box.sh sync`.
+`scripts/client_cv.sh` embeds the episodes, then runs 5-fold cross-validation of the stage labeler and SARM2 on the
+hand labels, and writes held-out comparisons, plots and review flags to `reports/client/` on the box.
+Results and data problems: [`docs/CLIENT.md`](docs/CLIENT.md).
+
 ## Keep in mind
 - The progress score is a learned estimate, not ground truth. Training labels rise steadily within each stage, so the model only learns stall and regression behavior from rewind augmentation and from reading the scene. That has to be checked on real failure episodes.
 - Settings are capped for a 40GB GPU (`train.gpu_mem_fraction`). The SigLIP pass runs only once, in `embed`.

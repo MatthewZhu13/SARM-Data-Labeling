@@ -48,10 +48,20 @@ def _set_dotted(cfg: dict, dotted: str, value: Any) -> None:
     node[keys[-1]] = value
 
 
+def _parse_value(raw: str):
+    value = yaml.safe_load(raw)
+    if isinstance(value, str):          # YAML 1.1 reads "1e-4" (no dot) as a string
+        try:
+            return float(value)
+        except ValueError:
+            pass
+    return value
+
+
 def load_config(path: str | Path, overrides: list[str] | None = None) -> Config:
     """Load a config; overrides look like ["train.val_every=500", "dataset.max_episodes=10"]."""
     cfg = _load_yaml(Path(path))
     for item in overrides or []:
         key, _, raw = item.partition("=")
-        _set_dotted(cfg, key, yaml.safe_load(raw))
+        _set_dotted(cfg, key, _parse_value(raw))
     return Config(cfg)

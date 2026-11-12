@@ -1,0 +1,173 @@
+{
+ "sarm_hand": {
+  "counts": {
+   "n_accepted": 45,
+   "n_rejected": 90,
+   "n_rejected_length_matched": 75
+  },
+  "auroc": {
+   "length_s": {
+    "auroc": 0.591,
+    "auroc_length_matched": 0.509,
+    "accepted_median": 58.133,
+    "rejected_median": 62.517
+   },
+   "final": {
+    "auroc": 0.823,
+    "auroc_length_matched": 0.821,
+    "accepted_median": 0.965,
+    "rejected_median": 0.933
+   },
+   "max": {
+    "auroc": 0.823,
+    "auroc_length_matched": 0.807,
+    "accepted_median": 0.981,
+    "rejected_median": 0.968
+   },
+   "mean": {
+    "auroc": 0.508,
+    "auroc_length_matched": 0.525,
+    "accepted_median": 0.493,
+    "rejected_median": 0.495
+   },
+   "backward": {
+    "auroc": 0.909,
+    "auroc_length_matched": 0.891,
+    "accepted_median": 0.025,
+    "rejected_median": 0.465
+   },
+   "drops": {
+    "auroc": 0.838,
+    "auroc_length_matched": 0.811,
+    "accepted_median": 0.0,
+    "rejected_median": 2.0
+   },
+   "rank_time": {
+    "auroc": 0.911,
+    "auroc_length_matched": 0.897,
+    "accepted_median": 1.0,
+    "rejected_median": 0.983
+   },
+   "time_to_0.9_s": {
+    "auroc": 0.606,
+    "auroc_length_matched": 0.54,
+    "accepted_median": 53.0,
+    "rejected_median": 56.0
+   }
+  }
+ },
+ "hqf_pilot": {
+  "counts": {
+   "n_accepted": 45,
+   "n_rejected": 90,
+   "n_rejected_length_matched": 75
+  },
+  "auroc": {
+   "length_s": {
+    "auroc": 0.591,
+    "auroc_length_matched": 0.509,
+    "accepted_median": 58.133,
+    "rejected_median": 62.517
+   },
+   "final": {
+    "auroc": 0.794,
+    "auroc_length_matched": 0.791,
+    "accepted_median": 0.979,
+    "rejected_median": 0.936
+   },
+   "max": {
+    "auroc": 0.803,
+    "auroc_length_matched": 0.784,
+    "accepted_median": 0.995,
+    "rejected_median": 0.985
+   },
+   "mean": {
+    "auroc": 0.53,
+    "auroc_length_matched": 0.585,
+    "accepted_median": 0.5,
+    "rejected_median": 0.487
+   },
+   "backward": {
+    "auroc": 0.924,
+    "auroc_length_matched": 0.909,
+    "accepted_median": 0.022,
+    "rejected_median": 0.368
+   },
+   "drops": {
+    "auroc": 0.847,
+    "auroc_length_matched": 0.824,
+    "accepted_median": 0.0,
+    "rejected_median": 2.0
+   },
+   "rank_time": {
+    "auroc": 0.891,
+    "auroc_length_matched": 0.872,
+    "accepted_median": 1.0,
+    "rejected_median": 0.988
+   },
+   "time_to_0.9_s": {
+    "auroc": 0.562,
+    "auroc_length_matched": 0.528,
+    "accepted_median": 53.0,
+    "rejected_median": 53.0
+   }
+  }
+ },
+ "baseline_sarm1": {
+  "counts": {
+   "n_accepted": 45,
+   "n_rejected": 90,
+   "n_rejected_length_matched": 75
+  },
+  "auroc": {
+   "length_s": {
+    "auroc": 0.591,
+    "auroc_length_matched": 0.509,
+    "accepted_median": 58.133,
+    "rejected_median": 62.517
+   },
+   "final": {
+    "auroc": 0.553,
+    "auroc_length_matched": 0.591,
+    "accepted_median": 0.949,
+    "rejected_median": 0.943
+   },
+   "max": {
+    "auroc": 0.557,
+    "auroc_length_matched": 0.596,
+    "accepted_median": 0.975,
+    "rejected_median": 0.971
+   },
+   "mean": {
+    "auroc": 0.607,
+    "auroc_length_matched": 0.623,
+    "accepted_median": 0.552,
+    "rejected_median": 0.535
+   },
+   "backward": {
+    "auroc": 0.699,
+    "auroc_length_matched": 0.648,
+    "accepted_median": 0.111,
+    "rejected_median": 0.214
+   },
+   "drops": {
+    "auroc": 0.601,
+    "auroc_length_matched": 0.565,
+    "accepted_median": 0.0,
+    "rejected_median": 0.0
+   },
+   "rank_time": {
+    "auroc": 0.664,
+    "auroc_length_matched": 0.625,
+    "accepted_median": 0.992,
+    "rejected_median": 0.977
+   },
+   "time_to_0.9_s": {
+    "auroc": 0.595,
+    "auroc_length_matched": 0.519,
+    "accepted_median": 53.0,
+    "rejected_median": 59.0
+   }
+  }
+ }
+}

@@ -1,0 +1,16 @@
+# Accepted vs rejected on lerobot/full_folding (sarm_pipeline/separation.py).
+# Models and normalization come from separation.train_config; this file only says where the
+# separation episodes are downloaded and cached.
+extends: hqf_pilot.yaml
+
+dataset:
+  repo_id: lerobot/full_folding
+  root: data/full_folding
+  episodes: []                      # filled from separation.file by `separation embed`
+
+cache_dir: cache/full_folding_sep
+
+separation:
+  train_config: configs/hqf_pilot.yaml
+  file: splits/sep_full_folding.json
+  report_dir: reports/separation

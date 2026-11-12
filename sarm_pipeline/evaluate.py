@@ -5,6 +5,8 @@ For every (strided) frame of each episode a window is built with no rewind, and 
   stage_pred     stage estimator as fine-tuned inside the reward run (reward/best.pt)
   progress_pred  reward model using the predicted stage
   progress_oracle reward model given the true stage (ablation: how much error comes from stages)
+  p_alone_k, p_ft_k  per-stage probabilities of both stage estimators
+  stage_decoded, stage_alone_decoded  ordered (Viterbi) decoding over the episode, see decode.py
 Outputs in <run>/eval_<split>/: predictions.parquet, metrics.json, plots/.
 """
 from __future__ import annotations
@@ -19,6 +21,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from . import sarm2
+from .decode import ordered_viterbi
 from .config import Config
 from .dataset import WindowDataset
 from .train import load_stage_model, run_dir, setup, to_device
@@ -30,48 +33,9 @@ import matplotlib.pyplot as plt  # noqa: E402
 @torch.no_grad()
 def predict(cfg: Config, split_name: str = "test") -> tuple[pd.DataFrame, dict, Path]:
     device, split, cache = setup(cfg)
-    w = cfg.window
-    episodes = split[split_name]
     out_dir = run_dir(cfg) / f"eval_{split_name}"
     (out_dir / "plots").mkdir(parents=True, exist_ok=True)
-
-    stage_alone = load_stage_model(cfg, cache, device).eval()
-    ckpt = torch.load(run_dir(cfg) / "reward" / "best.pt", map_location=device)
-    emb_dim = next(iter(cache.emb.values())).shape[1]
-    reward_model = sarm2.build_reward_model(cfg, emb_dim, cache.state.shape[1], len(cache.cameras)).to(device)
-    reward_model.load_state_dict(ckpt["models"]["reward"])
-    stage_model = load_stage_model(cfg, cache, device)
-    stage_model.load_state_dict(ckpt["models"]["stage"])
-    reward_model.eval(), stage_model.eval()
-    groups = sarm2.stage_groups(cfg).to(device)
-    stage_emb, task_emb = cache.stage_emb.to(device), cache.task_emb.to(device)
-
-    records = []
-    for ep in episodes:
-        start, length = cache.row_start[ep], cache.length[ep]
-        anchors = np.arange(start, start + length, int(cfg.eval.stride))
-        ds = WindowDataset(cache, [ep], "reward", w.n_obs_steps, w.frame_gap, anchors=anchors)
-        for batch in DataLoader(ds, batch_size=int(cfg.eval.batch_size)):
-            batch = to_device(batch, device)
-            out = sarm2.reward_forward(reward_model, stage_model, batch, stage_emb, task_emb, groups,
-                                       w.n_obs_steps, finetune_stage=False)
-            oracle = sarm2.reward_forward(reward_model, stage_model, batch, stage_emb, task_emb, groups,
-                                          w.n_obs_steps, finetune_stage=False, oracle_stage=True)
-            alone_logits, _ = stage_alone(*sarm2.stage_inputs(batch, w.n_obs_steps))
-            probs = torch.softmax(out["logits"], -1)
-            rows = batch["row"].cpu().numpy()
-            records.append(pd.DataFrame({
-                "episode_index": ep,
-                "frame_index": rows - start,
-                "stage_label": batch["stage"].cpu().numpy(),
-                "progress_label": batch["progress"][:, w.n_obs_steps].cpu().numpy(),
-                "stage_pred": probs.argmax(-1).cpu().numpy(),
-                "stage_conf": probs.max(-1).values.cpu().numpy(),
-                "stage_alone": alone_logits.argmax(-1).cpu().numpy(),
-                "progress_pred": sarm2.progress_at_anchor(out, w.n_obs_steps).cpu().numpy(),
-                "progress_oracle": sarm2.progress_at_anchor(oracle, w.n_obs_steps).cpu().numpy(),
-            }))
-    preds = pd.concat(records, ignore_index=True)
+    preds = frame_predictions(cfg, cache, split[split_name], load_models(cfg, cache, device), device)
     preds.to_parquet(out_dir / "predictions.parquet")
     metrics = compute_metrics(preds, cache.stage_names, fps=30, stride=int(cfg.eval.stride))
     (out_dir / "metrics.json").write_text(json.dumps(metrics, indent=1))
@@ -79,13 +43,91 @@ def predict(cfg: Config, split_name: str = "test") -> tuple[pd.DataFrame, dict, 
     return preds, metrics, out_dir
 
 
-def _stage_metrics(pred: np.ndarray, label: np.ndarray, n: int) -> dict:
+def load_models(cfg: Config, cache, device) -> dict:
+    """The run's stage estimator (stage/best.pt) and its reward model with the fine-tuned stage estimator."""
+    stage_alone = load_stage_model(cfg, cache, device).eval()
+    ckpt = torch.load(run_dir(cfg) / "reward" / "best.pt", map_location=device)
+    emb_dim = next(iter(cache.emb.values())).shape[1]
+    reward_model = sarm2.build_reward_model(cfg, emb_dim, cache.state.shape[1], len(cache.cameras)).to(device)
+    reward_model.load_state_dict(ckpt["models"]["reward"])
+    stage_model = load_stage_model(cfg, cache, device)
+    stage_model.load_state_dict(ckpt["models"]["stage"])
+    return {"alone": stage_alone, "reward": reward_model.eval(), "stage": stage_model.eval()}
+
+
+@torch.no_grad()
+def frame_predictions(cfg: Config, cache, episodes: list[int], models: dict, device) -> pd.DataFrame:
+    """Label every (strided) frame of `episodes` from `cache`; returns the decoded per-frame table."""
+    w = cfg.window
+    stage_alone, reward_model, stage_model = models["alone"], models["reward"], models["stage"]
+    groups = sarm2.stage_groups(cfg).to(device)
+    stage_emb, task_emb = cache.stage_emb.to(device), cache.task_emb.to(device)
+    records = []
+    for ep in episodes:
+        start, length = cache.row_start[ep], cache.length[ep]
+        anchors = np.arange(start, start + length, int(cfg.eval.stride))
+        ds = WindowDataset(cache, [ep], "reward", w.n_obs_steps, w.frame_gap, anchors=anchors)
+        for cpu_batch in DataLoader(ds, batch_size=int(cfg.eval.batch_size)):
+            batch = to_device(cpu_batch, device)
+            out = sarm2.reward_forward(reward_model, stage_model, batch, stage_emb, task_emb, groups,
+                                       w.n_obs_steps, finetune_stage=False)
+            oracle = sarm2.reward_forward(reward_model, stage_model, batch, stage_emb, task_emb, groups,
+                                          w.n_obs_steps, finetune_stage=False, oracle_stage=True)
+            alone_logits, _ = stage_alone(*sarm2.stage_inputs(batch, w.n_obs_steps))
+            probs = torch.softmax(out["logits"], -1)
+            alone_probs = torch.softmax(alone_logits, -1).cpu().numpy()
+            ft_probs = probs.cpu().numpy()
+            rows = cpu_batch["row"].numpy()
+            records.append(pd.DataFrame({
+                "episode_index": ep,
+                "frame_index": rows - start,
+                "stage_label": cpu_batch["stage"].numpy(),
+                "progress_label": cpu_batch["progress"][:, w.n_obs_steps].numpy(),
+                "stage_pred": probs.argmax(-1).cpu().numpy(),
+                "stage_conf": probs.max(-1).values.cpu().numpy(),
+                "stage_alone": alone_logits.argmax(-1).cpu().numpy(),
+                "progress_pred": sarm2.progress_at_anchor(out, w.n_obs_steps).cpu().numpy(),
+                "progress_oracle": sarm2.progress_at_anchor(oracle, w.n_obs_steps).cpu().numpy(),
+                **{f"p_alone_{k}": alone_probs[:, k] for k in range(alone_probs.shape[1])},
+                **{f"p_ft_{k}": ft_probs[:, k] for k in range(ft_probs.shape[1])},
+            }))
+    return add_decoded(pd.concat(records, ignore_index=True), cfg.eval.get("decode", {}))
+
+
+def add_decoded(preds: pd.DataFrame, decode: dict) -> pd.DataFrame:
+    """Ordered decoding per episode for both stage estimators (columns stage_decoded, stage_alone_decoded)."""
+    preds = preds.sort_values(["episode_index", "frame_index"]).reset_index(drop=True)
+    kw = {"switch_penalty": float(decode.get("switch_penalty", 5.0)), "skip_penalty": float(decode.get("skip_penalty", 5.0))}
+    for src, dst in (("p_ft_", "stage_decoded"), ("p_alone_", "stage_alone_decoded")):
+        cols = sorted((c for c in preds if c.startswith(src)), key=lambda c: int(c[len(src):]))
+        out = np.empty(len(preds), dtype=np.int64)
+        for _, idx in preds.groupby("episode_index").indices.items():
+            out[idx] = ordered_viterbi(preds.loc[idx, cols].to_numpy(), **kw)
+        preds[dst] = out
+    return preds
+
+
+def _boundary_distance(preds: pd.DataFrame) -> np.ndarray:
+    """Frames from each frame to the nearest change of the labeled stage within its episode."""
+    dist = np.empty(len(preds))
+    for _, idx in preds.groupby("episode_index").indices.items():
+        f = preds["frame_index"].to_numpy()[idx]
+        lab = preds["stage_label"].to_numpy()[idx]
+        change = f[1:][lab[1:] != lab[:-1]]
+        dist[idx] = np.abs(f[:, None] - change[None, :]).min(1) if len(change) else np.inf
+    return dist
+
+
+def _stage_metrics(pred: np.ndarray, label: np.ndarray, n: int, near_boundary: np.ndarray) -> dict:
     conf = np.zeros((n, n), dtype=int)
     np.add.at(conf, (label, pred), 1)
     recall = [float(conf[k, k] / conf[k].sum()) if conf[k].sum() else None for k in range(n)]
     precision = [float(conf[k, k] / conf[:, k].sum()) if conf[:, k].sum() else None for k in range(n)]
-    return {"accuracy": float((pred == label).mean()), "recall": recall, "precision": precision,
-            "confusion": conf.tolist()}
+    far = ~near_boundary
+    return {"accuracy": float((pred == label).mean()),
+            # labels are on whole seconds, so frames within 1 s of a labeled boundary are ambiguous
+            "accuracy_excl_1s_boundary": float((pred[far] == label[far]).mean()),
+            "recall": recall, "precision": precision, "confusion": conf.tolist()}
 
 
 def compute_metrics(preds: pd.DataFrame, stage_names: list[str], fps: int, stride: int) -> dict:
@@ -94,9 +136,12 @@ def compute_metrics(preds: pd.DataFrame, stage_names: list[str], fps: int, strid
         "n_episodes": int(preds["episode_index"].nunique()),
         "n_frames": len(preds),
         "stage_names": stage_names,
-        "stage_estimator_alone": _stage_metrics(preds["stage_alone"].to_numpy(), preds["stage_label"].to_numpy(), n),
-        "stage_estimator_finetuned": _stage_metrics(preds["stage_pred"].to_numpy(), preds["stage_label"].to_numpy(), n),
     }
+    near = _boundary_distance(preds) <= fps
+    for name, col in (("stage_estimator_alone", "stage_alone"), ("stage_estimator_finetuned", "stage_pred"),
+                      ("stage_alone_decoded", "stage_alone_decoded"), ("stage_finetuned_decoded", "stage_decoded")):
+        if col in preds:
+            m[name] = _stage_metrics(preds[col].to_numpy(), preds["stage_label"].to_numpy(), n, near)
     err = preds["progress_pred"] - preds["progress_label"]
     m["progress"] = {
         "mae": float(err.abs().mean()),
@@ -142,7 +187,9 @@ def plot(preds: pd.DataFrame, stage_names: list[str], out: Path, n_episodes: int
         a.legend(loc="upper left", frameon=False, fontsize=8)
         a.set_title(f"episode {ep_index}")
         b.step(t, ep["stage_label"], where="post", color="0.55", lw=1.5, label="label")
-        b.step(t, ep["stage_pred"], where="post", color="#2a6fdb", lw=1.2, label="predicted")
+        b.step(t, ep["stage_pred"], where="post", color="#2a6fdb", lw=1, alpha=0.5, label="predicted (per frame)")
+        if "stage_decoded" in ep:
+            b.step(t, ep["stage_decoded"], where="post", color="#1b9e4b", lw=1.5, label="predicted (ordered)")
         b.set_yticks(range(len(short)), short, fontsize=7)
         b.set_xlabel("seconds")
         b.legend(loc="lower right", frameon=False, fontsize=8)

@@ -23,7 +23,7 @@ case "${1:-}" in
   start) ssh gpu-control gpu start ;;
   stop)  ssh gpu-control gpu stop ;;
   sync)
-    rsync -az --delete --exclude .venv --exclude data --exclude cache --exclude runs --exclude logs \
+    rsync -az --delete --exclude .venv --exclude data --exclude cache --exclude runs --exclude logs --exclude checkpoints --exclude reports --exclude 'labels/client_*' --exclude 'splits/client_*' \
       --exclude '__pycache__' --exclude '*.egg-info' "$ROOT/" "$HOST:$REMOTE_DIR/" ;;
   setup)
     # the box has no python3-venv (ensurepip), so the venv borrows the system pip

@@ -103,7 +103,7 @@ class V3Dataset:
 
     def stage_segments(self, episode: int, stage_prefix: str) -> tuple[list[str], list[int], list[int]]:
         meta = self.episodes.loc[episode]
-        names = meta[f"{stage_prefix}_names"]
+        names = meta.get(f"{stage_prefix}_names")        # absent in unlabeled datasets (e.g. full_folding)
         if names is None or (isinstance(names, float) and np.isnan(names)):
             return [], [], []
         return (list(names),

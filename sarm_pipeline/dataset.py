@@ -51,7 +51,7 @@ class Cache:
 
 
 def load_cache(cache_dir: str | Path, cameras: list[str], stage_names: list[str], progress_mode: str,
-               train_episodes: list[int], in_memory: bool = True) -> Cache:
+               train_episodes: list[int], in_memory: bool = True, segments_override: str | None = None) -> Cache:
     """Load the cache and build labels. Stats (state normalization, stage shares) come from train episodes only."""
     cache_dir = Path(cache_dir)
     index = pd.read_parquet(cache_dir / "index.parquet")
@@ -59,6 +59,9 @@ def load_cache(cache_dir: str | Path, cameras: list[str], stage_names: list[str]
     length = dict(zip(episodes, index["length"].astype(int)))
     row_start = dict(zip(episodes, index["row_start"].astype(int)))
     segments = {int(k): v for k, v in json.loads((cache_dir / "segments.json").read_text()).items()}
+    if segments_override:          # relabeled episodes (e.g. labels/hand_train.json) replace the dataset's
+        segments.update({int(k): v for k, v in json.loads(Path(segments_override).read_text()).items()
+                         if not k.startswith("_")})
     text = torch.load(cache_dir / "text.pt")
     if text["stage_names"][:-1] != list(stage_names):
         raise ValueError("cache was built with different stage names; rebuild it with `embed`")

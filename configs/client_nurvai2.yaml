@@ -1,0 +1,46 @@
+# Client t-shirt folding data (local LeRobot v2.1, kept on the GPU box; never uploaded).
+# Only `nurvai2` is used: in the other client set ("Dataset", 17 episodes) no camera shows the fold
+# (cam_high faces the robot base), so it cannot be stage-labeled. See docs/CLIENT.md.
+extends: hqf_pilot.yaml
+
+run_name: client
+dataset:
+  format: v2.1
+  sources:
+    - {root: /home/matthew/data/client/nurvai2, offset: 0}
+  fps: 30                                   # pipeline frame rate (sources are resampled to it)
+  episodes: all
+  cameras:
+    left: observation.images.observations_images_cam_left_wrist
+    right: observation.images.observations_images_cam_right_wrist
+    top: observation.images.observations_images_cam_high
+  state_key: observation.state
+  task: fold a t-shirt
+
+split:
+  file: splits/client_nurvai2.json
+
+stages:
+  names:
+    - Spread the shirt flat
+    - Fold the sides into a long strip
+    - Fold the strip into a bundle
+    - Clear the folded shirt
+  groups:
+    manipulate_flat: [0]
+    fold: [1, 2]
+    clear: [3]
+
+labels:
+  segments_override: labels/client_hand.json
+
+cache_dir: cache/client_nurvai2
+
+stage_model:
+  steps: 8000
+reward_model:
+  steps: 15000
+
+episode_stage:
+  only_override_episodes: false
+  epochs: 200

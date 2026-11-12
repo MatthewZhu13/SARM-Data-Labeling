@@ -80,7 +80,10 @@ class _DecodeJobs(IterableDataset):
             yield from self._decode(job)
 
     def _decode(self, job: dict):
-        wanted = dict(zip(job["video_frames"], job["rows"]))
+        fps = job.get("fps", self.fps)
+        wanted: dict[int, list[int]] = {}                 # a video frame can feed several rows (end-of-episode clamp)
+        for vf, row in zip(job["video_frames"], job["rows"]):
+            wanted.setdefault(vf, []).append(row)
         first, last = min(wanted), max(wanted)
         found, rows, frames = 0, [], []
         with av.open(job["path"]) as container:
@@ -88,19 +91,20 @@ class _DecodeJobs(IterableDataset):
             stream.thread_type = "AUTO"
             stream.codec_context.thread_count = self.threads
             if first > 0:
-                container.seek(int(first / self.fps / stream.time_base), stream=stream, backward=True)
+                container.seek(int(first / fps / stream.time_base), stream=stream, backward=True)
             for frame in container.decode(stream):
-                vf = round(float(frame.pts * stream.time_base) * self.fps)
+                vf = round(float(frame.pts * stream.time_base) * fps)
                 if vf > last:
                     break
-                row = wanted.get(vf)
-                if row is None:
+                targets = wanted.get(vf)
+                if targets is None:
                     continue
-                img = frame.reformat(width=self.size, height=self.size, format="rgb24", interpolation="AREA")
-                rows.append(row)
-                frames.append(img.to_ndarray())
+                img = frame.reformat(width=self.size, height=self.size, format="rgb24", interpolation="AREA").to_ndarray()
+                for row in targets:
+                    rows.append(row)
+                    frames.append(img)
                 found += 1
-                if len(rows) == self.chunk:
+                if len(rows) >= self.chunk:
                     yield {"job": job["id"], "camera": job["camera"], "rows": np.array(rows),
                            "frames": np.stack(frames), "last": False}
                     rows, frames = [], []
@@ -146,10 +150,12 @@ def build_cache(cfg: Config, ds: V3Dataset, episodes: list[int]) -> Path:
     for (cam, key, chunk, file), group in pm.groupby(["camera", "video_key", "chunk_index", "file_index"]):
         vfs, rows = [], []
         for r in group.itertuples():
-            vfs.extend(range(r.video_start_frame, r.video_start_frame + r.length))
+            # v2.1 sources list their (resampled) native frames explicitly; v3.0 frames are contiguous
+            vf = getattr(r, "video_frames", None)
+            vfs.extend(vf if isinstance(vf, list) else range(r.video_start_frame, r.video_start_frame + r.length))
             rows.extend(range(r.row_start, r.row_start + r.length))
         jobs.append({"id": f"{cam}/{chunk}/{file}", "camera": cam, "path": str(ds.video_path(key, chunk, file)),
-                     "video_frames": vfs, "rows": rows})
+                     "video_frames": vfs, "rows": rows, "fps": int(getattr(group.iloc[0], "native_fps", ds.fps))})
     done = set(meta["done_jobs"])
     pending = [j for j in jobs if j["id"] not in done]
 
